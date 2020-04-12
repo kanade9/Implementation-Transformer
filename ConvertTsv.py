@@ -1,23 +1,6 @@
-# for colab
-"""
-! mkdir data
-"""
-
-# Download IMDb dataset
+# トレーニングデータのneg,pos,テストデータのneg,posのtsvファイル作成
 import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zipfile
 from torchtext.vocab import Vectors
-
-url = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
-save_path = "./data/aclImdb_v1.tar.gz"
-if not os.path.exists(save_path):
-    urllib.request.urlretrieve(url, save_path)
-urllib.request.urlretrieve(url)
-tar = tarfile.open('./data/aclImdb_v1.tar.gz')
-tar.extractall('./data/')
-tar.close()
-
-
-# トレーニングデータのneg,pos,テストデータのneg,posのtsvファイル作成
 
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
@@ -48,9 +31,9 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     for fname in glob.glob(os.path.join(path, '*.txt')):
         with io.open(fname, 'r', encoding="utf-8") as ff:
             text = ff.readline()
-    text = text.replace('\t', " ")
-    text = text + '\t' + '1' + '\t' + '\n'
-    f.write(text)
+            text = text.replace('\t', " ")
+            text = text + '\t' + '1' + '\t' + '\n'
+            f.write(text)
 
     path = './data/aclImdb/train/neg/'
     for fname in glob.glob(os.path.join(path, '*.txt')):

@@ -6,7 +6,7 @@ import ConvertTsv
 # Embedderモジュールの実装
 
 # idで管理されている単語をベクトル表現で表す
-class Embedder(nn.module):
+class Embedder(nn.Module):
 
     def __init__(self, text_embedding_vectors):
         super(Embedder, self).__init__()
@@ -23,7 +23,7 @@ class Embedder(nn.module):
 
 # PositionalEncodeモジュールの実装
 # 入力単語の位置情報のベクトル情報付加
-class PositionalEncoder(nn.module):
+class PositionalEncoder(nn.Module):
 
     # d_model は単語ベクトルの次元数を表す
     def __init__(self, d_model=300, max_seq_len=256):
@@ -73,8 +73,8 @@ x = batch.Text[0]
 x1 = net1(x)
 
 print("動作確認(Embedder)")
-print("入力テンソルサイズ:", x.shape())
-print("出力テンソルサイズ:", x.shape())
+print("入力テンソルサイズ:", x.shape)
+print("出力テンソルサイズ:", x1.shape)
 
 # 動作確認(Positional Encoder)
 
@@ -86,5 +86,5 @@ x1=net1(x)
 x2=net2(x1)
 
 print("動作確認(Positional Encoder)")
-print("入力テンソルサイズ:", x.shape())
-print("出力テンソルサイズ:", x.shape())
+print("入力テンソルサイズ:", x1.shape)
+print("出力テンソルサイズ:", x2.shape)
