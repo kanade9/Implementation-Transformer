@@ -25,7 +25,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
                  './data/aclImdb/test/neg/']
 
     # ここなんか訓練データが半減するので、公式の以下の方法で行う
-
+    """
     for dataset_path in path_list:
         if 'train' in dataset_path:
             f = open('./data/IMDb_train.tsv', 'w')
@@ -40,7 +40,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
             text = text + '\t' + '1' + '\t' + '\n'
             f.write(text)
     f.close()
-
+    """
     f = open('./data/IMDb_train.tsv', 'w')
 
     path = './data/aclImdb/train/pos/'
