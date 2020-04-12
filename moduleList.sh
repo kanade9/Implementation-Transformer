@@ -1,0 +1,1 @@
+pip install urllib, tarfile,torch,torchtext,
