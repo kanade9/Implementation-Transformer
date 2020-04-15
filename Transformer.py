@@ -101,7 +101,52 @@ class Attention(nn.module):
 
         return output, normlized_weights
 
+
 class FeedForward(nn.module):
+    def __init__(self, d_model, d_ff=1024, dropout=0.1):
+        # Attention層から出力を単純に全結合層2つで特徴量を変換するだけのユニット
+
+        super().__init__()
+
+        self.linear_1 = nn.Linear(d_model, d_ff)
+        self.dropout = nn.Dropout(dropout)
+        self.linear_2 = nn.Linear(d_ff, f_model)
+
+    def forward(self, x):
+        x = self.linear_1(x)
+        x = self.dropout(F.relu(x))
+        x = self.linear_2(x)
+        return x
+
+
+class TransformerBlock(nn.Module):
+    def __init__(self, d_model, dropout=0.1):
+        super().__init__()
+
+        # LayerNormalization層(詳しくはpytorchのドキュメントを読む)
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
+
+        # Attention層
+        self.attn = Attention(d_model)
+
+        # Attentionの後の全結合二つ
+        self.ff = FeedForward(d_model)
+
+        self.dropout_1 = nn.Dropout(dropout)
+        self.dropout_2 = nn.Dropout(dropout)
+
+    def forward(self, x, mask):
+        # 正規化とAttention
+        x_normlized = self.norm_1(x)
+        output, normlized_weights = self.attn(x_normlized, x_normlized, x_normlized, mask)
+
+        # 正規化と全結合層
+        x_normlized2 = self.norm_2(x2)
+        output = x2 + self.dropout_2(self.ff(x_normlized2))
+
+        return output, normlized_weights
+
 
 # 動作確認(Embedder)
 
@@ -131,3 +176,23 @@ x2 = net2(x1)
 print("動作確認(Positional Encoder)")
 print("入力テンソルサイズ:", x1.shape)
 print("出力テンソルサイズ:", x2.shape)
+
+# 動作確認(TransformerBlock)
+net1 = Embedder(TEXT.vocab.vectors)
+net2 = PositionalEncoder(d_model=300, max_seq_len=256)
+net3 = TransformerBlock(d_model=300)
+
+# mask作成
+x = batch.Text[0]
+input_pad = 1  # 単語のIDでは'<pad>'が1
+input_mask = (x != input_pad)
+print(input_mask[0])
+
+x1 = net1(x)
+x2 = net2(x1)
+# Self-Attentionで特徴量を変換する
+x3, normlized_weights = net3(x2, input_mask)
+print("TransformerBlock")
+print("入力テンソルサイズ:", x2.shape)
+print("出力テンソルサイズ:", x3.shape)
+print("Attentionのサイズ", normlized_weights.shape)
