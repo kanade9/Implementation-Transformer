@@ -60,6 +60,49 @@ class PositionalEncoder(nn.Module):
         return ret
 
 
+# 論文では本来、マルチヘッドのAttentionを用いているが、今回は簡単のためにシングルヘッドAttentionを実装する
+class Attention(nn.module):
+    def __init__(self, d_model=300):
+        super().__init__()
+
+        # 全結合層で特徴量を変換する
+        self.q_linear = nn.Linear(d_model, d_model)
+        self.v_linear = nn.Linear(d_model, d_model)
+        self.k_linear = nn.Linear(d_model, d_model)
+
+        # 出力時に使用する全結合層
+        self.out = nn.Linear(d_model, d_model)
+
+        # Attentionの大きさ調整の変数
+        self.d_k = d_model
+
+    def forward(self, q, k, v, mask):
+        # 全結合層で特徴量を変換する
+        k = self.k_linear(k)
+        q = self.q_linear(q)
+        v = self.k_linear(v)
+
+        # Attentionの値を計算する
+        # 各値を足し算すると大きくなりすぎるため、root(d_k)で割って調整を行う
+        weights = torch.matmul(q, k.transpose(1, 2)) / math.sqrt(self.d_k)
+
+        # maskの計算
+        mask = mask.unsqueeze(1)
+        weights = weights.masked_fill(mask == 0, -1e9)
+
+        # softmaxで規格化をする
+        normlized_weights = F.softmax(weights, dim=-1)
+
+        # AttentionをValueと掛け算する
+        output = torch.matmul(normlized_weights, v)
+
+        # 全結合層で特徴量を変換する
+        output = self.out(output)
+
+        return output, normlized_weights
+
+class FeedForward(nn.module):
+
 # 動作確認(Embedder)
 
 train_dl, val_dl, test_dl, TEXT = ConvertTsv.get_IMDb_DataLoaders_and_TEXT(
@@ -78,12 +121,12 @@ print("出力テンソルサイズ:", x1.shape)
 
 # 動作確認(Positional Encoder)
 
-net1=Embedder(TEXT.vocab.vectors)
-net2=PositionalEncoder(d_model=300,max_seq_len=256)
+net1 = Embedder(TEXT.vocab.vectors)
+net2 = PositionalEncoder(d_model=300, max_seq_len=256)
 
 x = batch.Text[0]
-x1=net1(x)
-x2=net2(x1)
+x1 = net1(x)
+x2 = net2(x1)
 
 print("動作確認(Positional Encoder)")
 print("入力テンソルサイズ:", x1.shape)
