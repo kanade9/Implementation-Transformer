@@ -151,6 +151,59 @@ class TransformerBlock(nn.Module):
         return output, normlized_weights
 
 
+"""
+TransformerBlockモジュールを繰り返しやって特徴量変換をした後、Classificationモジュールに入力してネガポジ判定する。
+init_token="<cls>"と設定して、先頭単語clsの特徴量を利用する。
+この損失がback propagationで伝播してゆき。ネットワークが学習される。
+"""
+
+
+class ClassificationHead(nn.Module):
+    def __init__(self, d_model=300, output_dim=2):
+        super().__init__()
+
+        # 全結合層 出力次元はneg,posの2次元
+        self.linear = nn.Linear(d_model, output_dim)
+
+        # 重み初期化処理
+        nn.init.normal_(self.linear.weight, std=0.02)
+        nn.init.normal_(self.linear.bias, 0)
+
+    def forward(self, x):
+        # 各ミニバッチの各文の先頭の単語の特徴量(300次元)を取り出す
+        x0 = x[:, 0, :]
+        out = self.linear(x0)
+
+        return out
+
+
+# ここまでで実装したモジュールを組み合わせて分類タスク用のTransformerを実装する=最終的Transformerモデルのクラス
+# Transformerでクラス分類
+class TransformerClassification(nn.Module):
+    def __init__(self, text_embedding_vectors, d_model=300, max_seq_len=256, output_dim=2):
+        super().__init__()
+
+        # モデルの構築
+        self.net1 = Embedder(text_embedding_vectors)
+        self.net2 = PositionalEncoder(d_model=d_model, max_seq_len=max_seq_len)
+        self.net3_1 = TransformerBlock(d_model=d_model)
+        self.net3_2 = TransformerBlock(d_model=d_model)
+        self.net4 = ClassificationHead(output_dim=output_dim, d_model=d_model)
+
+    def forward(self, x, mask):
+        # 単語をベクトルにする
+        x1 = self.net1(x)
+        # Position情報を足し算する
+        x2 = self.net2(x1)
+        # Self-Attentionで特徴量を変換する
+        x3_1, normlized_weights_1 = self.net3_1(x2, mask)
+        x3_2, normlized_weights_2 = self.net3_2(x3_1, mask)
+        # 最終出力の0単語目を利用して、分類0-1のスカラーを出力する
+        x4 = self.net4(x3_2)
+
+        return x4, normlized_weights_1, normlized_weights_2
+
+
 # 動作確認(Embedder)
 
 train_dl, val_dl, test_dl, TEXT = ConvertTsv.get_IMDb_DataLoaders_and_TEXT(
@@ -199,3 +252,16 @@ print("TransformerBlock")
 print("入力テンソルサイズ:", x2.shape)
 print("出力テンソルサイズ:", x3.shape)
 print("Attentionのサイズ", normlized_weights.shape)
+
+# 最後にTransformer全体の動作確認を行う
+batch = next(iter(train_dl))
+
+net = TransformerClassification(text_embedding_vectors=TEXT.vocab.vectors, d_model=300, max_seq_len=256, output_dim=2)
+
+x = batch.Text[0]
+input_mask = (x != input_pad)
+out, normlized_weights_1, normlized_weights_2 = net(x, input_mask)
+
+print("Transformer全体")
+print("出力テンソルサイズ:", out.shape)
+print("出力テンソルのsigmoid:", F.softmax(out, dim=1))
