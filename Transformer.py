@@ -1,4 +1,5 @@
 import torch.nn as nn, torch, math
+import torch.nn.functional as F
 from torchtext.vocab import Vectors
 import ConvertTsv
 
@@ -61,7 +62,7 @@ class PositionalEncoder(nn.Module):
 
 
 # 論文では本来、マルチヘッドのAttentionを用いているが、今回は簡単のためにシングルヘッドAttentionを実装する
-class Attention(nn.module):
+class Attention(nn.Module):
     def __init__(self, d_model=300):
         super().__init__()
 
@@ -102,7 +103,7 @@ class Attention(nn.module):
         return output, normlized_weights
 
 
-class FeedForward(nn.module):
+class FeedForward(nn.Module):
     def __init__(self, d_model, d_ff=1024, dropout=0.1):
         # Attention層から出力を単純に全結合層2つで特徴量を変換するだけのユニット
 
@@ -110,7 +111,7 @@ class FeedForward(nn.module):
 
         self.linear_1 = nn.Linear(d_model, d_ff)
         self.dropout = nn.Dropout(dropout)
-        self.linear_2 = nn.Linear(d_ff, f_model)
+        self.linear_2 = nn.Linear(d_ff, d_model)
 
     def forward(self, x):
         x = self.linear_1(x)
@@ -140,6 +141,8 @@ class TransformerBlock(nn.Module):
         # 正規化とAttention
         x_normlized = self.norm_1(x)
         output, normlized_weights = self.attn(x_normlized, x_normlized, x_normlized, mask)
+
+        x2 = x + self.dropout_1(output)
 
         # 正規化と全結合層
         x_normlized2 = self.norm_2(x2)
