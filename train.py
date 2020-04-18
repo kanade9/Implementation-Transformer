@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.optim as optim
 from ConvertTsv import get_IMDb_DataLoaders_and_TEXT
@@ -40,3 +41,70 @@ criterion = nn.CrossEntropyLoss()
 # 最適化手法の設定
 learning_rate = 2e-5
 optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+
+
+# train
+def train_model(net, dataloaders_dict, criterion, optimizer, num_epochs):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("使用デバイス:", device)
+    print('-----start-----')
+    net.to(device)
+
+    # ネットワークがある程度固定であれば高速化させる
+    # 有効??
+    torch.backends.cudnn.benchmark = True
+
+    # epochのループ
+    for epoch in range(num_epochs):
+        # epochごとの訓練と検証のループ
+        for phase in ['train', 'val']:
+            if phase == 'train':
+                net.train()
+            else:
+                net.eval()
+
+            epoch_loss = 0.0  # epochの損失和
+            epoch_corrects = 0  # epochの正解数
+
+            # データローダーからミニバッジを取り出すループ,batchはTextとLabelの辞書オブジェクト
+            for batch in (dataloaders_dict[phase]):
+                # GPU使用可ならGPUに送る
+                inputs = batch.Text[0].to(device)  # 文書
+                labels = batch.Label.to(device)  # ラベル
+
+                # optimizerを初期化
+                optimizer.zero_grad()
+
+                # 順伝播の計算
+                with torch.set_grad_enabled(phase == 'train'):
+                    # mask作成
+                    input_pad = 1  # 最初の単語は'<pad>':1より
+                    input_mask = (inputs != input_pad)
+
+                    # Transformerに入力
+                    outputs, _, _ = net(inputs, input_mask)
+                    loss = criterion(outputs, labels)  # 損失の計算
+                    _, preds = criterion(outputs, labels)  # ラベルの予測
+
+                    # 訓練時は誤差逆伝播
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
+
+                    # 結果の計算
+                    epoch_loss += loss.item() * inputs.size(0)  # lossの合計を更新
+                    # 正解数の合計を更新する
+                    epoch_corrects += torch.sum(preds == labels.data)
+
+            # epochごとのlossと正解率
+            epoch_loss = epoch_loss / len(dataloaders_dict[phase].dataset)
+            epoch_acc = epoch_corrects.double() / len(dataloaders_dict[phase].dataset)
+
+            print(
+                'Epoch {}/{} | {:^5} | Loss: {:.4f} Acc: {:.4f}'.format(
+                    epoch + 1, num_epochs, phase, epoch_loss, epoch_loss, epoch_acc))
+    return net
+
+
+num_epoch = 10
+net_trained = train_model(net, dataloaders_dict, criterion, optimizer, num_epochs=num_epoch)
