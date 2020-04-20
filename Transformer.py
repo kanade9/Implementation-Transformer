@@ -55,7 +55,6 @@ class PositionalEncoder(nn.Module):
     def forward(self, x):
         # 入力xとPositional Encodingの足し算
         # 入力はpeよりも小さくなってしまうので、大きくする
-
         ret = math.sqrt(self.d_model) * x + self.pe
 
         return ret
@@ -204,6 +203,7 @@ class TransformerClassification(nn.Module):
         return x4, normlized_weights_1, normlized_weights_2
 
 
+"""
 # 動作確認(Embedder)
 
 train_dl, val_dl, test_dl, TEXT = ConvertTsv.get_IMDb_DataLoaders_and_TEXT(
@@ -265,3 +265,5 @@ out, normlized_weights_1, normlized_weights_2 = net(x, input_mask)
 print("Transformer全体")
 print("出力テンソルサイズ:", out.shape)
 print("出力テンソルのsigmoid:", F.softmax(out, dim=1))
+
+"""
