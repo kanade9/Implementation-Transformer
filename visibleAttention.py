@@ -7,7 +7,7 @@ def highlight(word,attn):
 
 def mk_html(index,batch,preds,normlized_weight_1,normlized_weight_2, TEXT):
     # indexの結果を抽出
-    sentence=batch.TEXT[0][index] # 文書
+    sentence=batch.Text[0][index] # 文書
     label=batch.Label[index] # ラベル
     pred = preds[index] # 予測
 
@@ -34,7 +34,7 @@ def mk_html(index,batch,preds,normlized_weight_1,normlized_weight_2, TEXT):
 
     # 1段目のattention
     html += '[TransformerBlockの1段目のAttentionを可視化]<br>'
-    for word, attn in zip(sentence,attens1)
+    for word, attn in zip(sentence,attens1):
         html+= highlight(TEXT.vocab.itos[word],attn)
 
     html+="<br><br>"
@@ -42,7 +42,7 @@ def mk_html(index,batch,preds,normlized_weight_1,normlized_weight_2, TEXT):
     # 2段目のattention
 
     html += '[TransformerBlockの2段目のAttentionを可視化]<br>'
-    for word, attn in zip(sentence,attens2)
+    for word, attn in zip(sentence,attens2):
         html+= highlight(TEXT.vocab.itos[word],attn)
 
     html+="<br><br>"
