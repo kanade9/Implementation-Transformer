@@ -49,4 +49,3 @@ def mk_html(index,batch,preds,normlized_weight_1,normlized_weight_2, TEXT):
 
     return html
 
-    
