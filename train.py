@@ -148,6 +148,7 @@ print('テストデータ{}個での正解率:{:.4f}'.format(len(test_dl.dataset
 output_data_num = 50
 html_output = "<!DOCTYPE html><html lang=\"en\"><meta charset=\"utf-8\"/>"
 f = open('./result.html', 'a')
+f.write(html_output)
 
 for index in range(1, output_data_num + 1):
     batch = next(iter(test_dl))
