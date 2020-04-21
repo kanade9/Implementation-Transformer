@@ -145,25 +145,24 @@ epoch_acc = epoch_corrects.double() / len(test_dl.dataset)
 print('テストデータ{}個での正解率:{:.4f}'.format(len(test_dl.dataset), epoch_acc))
 
 # ここから判定根拠のHTML出力を行う
-
-batch = next(iter(test_dl))
-inputs = batch.Text[0].to(device)
-labels = batch.Label.to(device)
-
-input_pad = 1
-input_mask = (inputs != input_pad)
-
-# Transformerに入力する
-
-outputs, normlized_weights_1, normlized_weights_2 = net_trained(inputs, input_mask)
-
-_, preds = torch.max(outputs, 1)  # ラベルを予測
-
 output_data_num = 50
-html_output = ""
+html_output = "<!DOCTYPE html><html lang=\"en\"><meta charset=\"utf-8\"/>"
 f = open('./result.html', 'a')
 
 for index in range(1, output_data_num + 1):
+    batch = next(iter(test_dl))
+    inputs = batch.Text[0].to(device)
+    labels = batch.Label.to(device)
+
+    input_pad = 1
+    input_mask = (inputs != input_pad)
+
+    # Transformerに入力する
+
+    outputs, normlized_weights_1, normlized_weights_2 = net_trained(inputs, input_mask)
+
+    _, preds = torch.max(outputs, 1)  # ラベルを予測
+
     html_output = visibleAttention.mk_html(index, batch, preds, normlized_weights_1, normlized_weights_2, TEXT)
     f.write(html_output)
 f.close()
