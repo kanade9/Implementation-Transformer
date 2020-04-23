@@ -1,29 +1,13 @@
 # トレーニングデータのneg,pos,テストデータのneg,posのtsvファイル作成
 import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zipfile
 from torchtext.vocab import Vectors
+import glob, mojimoji
 
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
     path_list = ['./data/aclImdb/train/pos/', './data/aclImdb/train/neg/', './data/aclImdb/test/pos/',
                  './data/aclImdb/test/neg/']
 
-    # ここなんか訓練データが半減するので、公式の以下の方法で行う
-    """
-    for dataset_path in path_list:
-        if 'train' in dataset_path:
-            f = open('./data/IMDb_train.tsv', 'w')
-        else:
-            f = open('./data/IMDb_test.tsv', 'w')
-
-    # ダウンロードしてきたファイルの整形を行う
-    for fname in glob.glob(os.path.join(dataset_path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '1' + '\t' + '\n'
-            f.write(text)
-    f.close()
-    """
     f = open('./data/IMDb_train.tsv', 'w')
 
     path = './data/aclImdb/train/pos/'
@@ -66,6 +50,57 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     f.close()
 
+    filenames = glob.glob('text/*/*')
+
+    keys = []
+    texts = []
+    labels = []
+    for filename in filenames:
+        if re.search('LICENSE', filename):
+            continue
+
+        with open(filename, 'r', encoding='utf-8') as f:
+            filepath, basename = os.path.split(filename)
+
+            keys.append(os.path.splitext(basename)[0])
+            texts.append(''.join(f.readlines()[2:]))
+            labels.append(os.path.split(filepath)[-1])
+
+    news = pd.DataFrame({'key': keys, 'label': labels, 'text': texts})
+
+    mecab_sym = MeCab.Tagger('-Ochasen')
+    symbol_list = []
+
+    def pick_sym(text):
+        node = mecab_sym.parseToNode(text)
+        while node:
+            if node.feature.split(',')[0] == '記号':
+                symbol_list.append(node.feature.split(",")[6])
+            node = node.next
+
+    news['text'] = news['text'].apply(mojimoji.han_to_zen)
+
+    symbol_list = []
+    for i in range(len(news)):
+        symbol_list.append(pick_sym(news['text'].iloc[i]))
+
+    symbol_list = list(set(symbol_list))
+
+    def del_sym(df):
+        df['text'] = df['text'].str.replace('\d+年', '', regex=True)
+        df['text'] = df['text'].str.replace('\d+月', '', regex=True)
+        df['text'] = df['text'].str.replace('\d+日', '', regex=True)
+        df['text'] = df['text'].str.replace('\d+', '0', regex=True)
+        df['text'] = df['text'].str.replace('\n', '')
+        for i in range(len(symbol_list)):
+            df['text'] = df['text'].str.replace(symbol_list[i], '')
+        return df
+
+    # いらないものを取り去る作業
+    for DataFrameTextIndex in range(len(news)):
+        news['text'].iloc[DataFrameTextIndex] = del_sym(news['text'].iloc[DataFrameTextIndex])
+
+    # ここまで編集したよ----------------------------------------------
     # ここから前処理
     def preprocessing_text(text):
 
