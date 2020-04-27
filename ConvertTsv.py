@@ -1,7 +1,10 @@
 # トレーニングデータのneg,pos,テストデータのneg,posのtsvファイル作成
 import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zipfile
 from torchtext.vocab import Vectors
-import glob, mojimoji
+
+# 日本語を分類するにあたって追加
+import glob, mojimoji, pandas as pd
+from natto import MeCab
 
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
@@ -23,7 +26,9 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     news = pd.DataFrame({'key': keys, 'label': labels, 'text': texts})
 
-    mecab_sym = MeCab.Tagger('-Ochasen')
+    # natoo-pyではコンストラクタに渡す
+
+    mecab_sym = MeCab("-Owakati")
     symbol_list = []
 
     def pick_sym(text):
@@ -144,3 +149,5 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print(batch.Label)
 
     return train_dl, val_dl, test_dl, TEXT
+
+get_IMDb_DataLoaders_and_TEXT()
