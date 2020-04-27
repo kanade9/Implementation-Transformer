@@ -75,31 +75,14 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     f.close()
 
     # ここから前処理
-    def preprocessing_text(text):
 
-        text = re.sub('<br />', '', text)
-
-        for p in string.punctuation:
-            if (p == ".") or (p == ","):
-                continue
-        text = text.replace(p, " ")
-
-        text = text.replace(".", " . ")
-        text = text.replace(",", " , ")
-        return text
-
-    # 分かち書き
-    def tokenizer_punctuation(text):
-
-        return text.strip().split()
+    # mecabこれで動く??
+    mecab = MeCab.Tagger("-Owakati")
 
     def tokenizer_with_preprocessing(text):
+        return [tok for tok in mecab.parse(text).split()]
 
-        text = preprocessing_text(text)
-        ret = tokenizer_punctuation(text)
-        return ret
-
-    print(tokenizer_with_preprocessing('I like cats.'))
+    print(tokenizer_with_preprocessing('私はお寿司が好きです。'))
 
     # DataLoaderの作成
     # init_token 全部の文章で文頭に入れておく単語
