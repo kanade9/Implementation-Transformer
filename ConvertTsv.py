@@ -5,51 +5,6 @@ import glob, mojimoji
 
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
-    path_list = ['./data/aclImdb/train/pos/', './data/aclImdb/train/neg/', './data/aclImdb/test/pos/',
-                 './data/aclImdb/test/neg/']
-
-    f = open('./data/IMDb_train.tsv', 'w')
-
-    path = './data/aclImdb/train/pos/'
-
-    for fname in glob.glob(os.path.join(path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '1' + '\t' + '\n'
-            f.write(text)
-
-    path = './data/aclImdb/train/neg/'
-    for fname in glob.glob(os.path.join(path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '0' + '\t' + '\n'
-            f.write(text)
-
-    f.close()
-
-    f = open('./data/IMDb_test.tsv', 'w')
-
-    path = './data/aclImdb/test/pos/'
-    for fname in glob.glob(os.path.join(path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '1' + '\t' + '\n'
-            f.write(text)
-
-    path = './data/aclImdb/test/neg/'
-
-    for fname in glob.glob(os.path.join(path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '0' + '\t' + '\n'
-            f.write(text)
-
-    f.close()
-
     filenames = glob.glob('text/*/*')
 
     keys = []
@@ -96,11 +51,29 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
             df['text'] = df['text'].str.replace(symbol_list[i], '')
         return df
 
-    # いらないものを取り去る作業
+    # いらないものを取り去り、tsvに格納する作業
     for DataFrameTextIndex in range(len(news)):
         news['text'].iloc[DataFrameTextIndex] = del_sym(news['text'].iloc[DataFrameTextIndex])
 
-    # ここまで編集したよ----------------------------------------------
+    news_delsym['label'] = news_delsym['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
+    train_set, test_set = train_test_split(news_delsym, test_size=0.2)
+
+    f = open('./data-japanese/jp_train.tsv', 'w')
+    for index in range(len(train_set)):
+        text = train_set(news['text'].iloc[index])
+        label_num = train_set(news['label'].iloc[index])
+        text = text + '\t' + str(label_num) + '\t' + '\n'
+        f.write(text)
+    f.close()
+
+    f = open('./data-japanese/jp_test.tsv', 'w')
+    for index in range(len(test_set)):
+        text = test_set(news['text'].iloc[index])
+        label_num = test_set(news['label'].iloc[index])
+        text = text + '\t' + str(label_num) + '\t' + '\n'
+        f.write(text)
+    f.close()
+
     # ここから前処理
     def preprocessing_text(text):
 
@@ -141,8 +114,8 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # Datasetの作成
     # 訓練および検証データセットを分ける。
     train_val_ds, test_ds = torchtext.data.TabularDataset.splits(
-        path='./data/', train='IMDb_train.tsv',
-        test='IMDb_test.tsv', format='tsv',
+        path='./data-japanese/', train='jp_train.tsv',
+        test='jp_test.tsv', format='tsv',
         fields=[('Text', TEXT), ('Label', LABEL)])
 
     if debug_log:
@@ -160,14 +133,14 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print('１つ目の訓練データ', vars(train_ds[0]))
 
     # torchtextで単語ベクトルとして英語学習済みモデルを利用する。
-    english_fasttext_vectors = Vectors(name='data/wiki-news-300d-1M.vec')
+    jp_word2vec_vectors = Vectors(name='data-japanese/japanese_word2vec_vectors.vec')
 
     if debug_log:
-        print("1単語を表現する次元数:", english_fasttext_vectors.dim)
-        print("単語数:", len(english_fasttext_vectors.itos))
+        print("1単語を表現する次元数:", jp_word2vec_vectors.dim)
+        print("単語数:", len(jp_word2vec_vectors.itos))
 
     # ベクトル化したバージョンのボキャブラリーを作成する
-    TEXT.build_vocab(train_ds, vectors=english_fasttext_vectors, min_freq=10)
+    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=10)
 
     # ボキャブラリーのベクトルの確認を行う
     if debug_log:
