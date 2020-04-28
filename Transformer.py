@@ -27,7 +27,7 @@ class Embedder(nn.Module):
 class PositionalEncoder(nn.Module):
 
     # d_model は単語ベクトルの次元数を表す
-    def __init__(self, d_model=300, max_seq_len=256):
+    def __init__(self, d_model=200, max_seq_len=256):
         super().__init__()
 
         self.d_model = d_model
@@ -62,7 +62,7 @@ class PositionalEncoder(nn.Module):
 
 # 論文では本来、マルチヘッドのAttentionを用いているが、今回は簡単のためにシングルヘッドAttentionを実装する
 class Attention(nn.Module):
-    def __init__(self, d_model=300):
+    def __init__(self, d_model=200):
         super().__init__()
 
         # 全結合層で特徴量を変換する
@@ -158,7 +158,7 @@ init_token="<cls>"と設定して、先頭単語clsの特徴量を利用する�
 
 
 class ClassificationHead(nn.Module):
-    def __init__(self, d_model=300, output_dim=2):
+    def __init__(self, d_model=200, output_dim=2):
         super().__init__()
 
         # 全結合層 出力次元はneg,posの2次元
@@ -179,7 +179,7 @@ class ClassificationHead(nn.Module):
 # ここまでで実装したモジュールを組み合わせて分類タスク用のTransformerを実装する=最終的Transformerモデルのクラス
 # Transformerでクラス分類
 class TransformerClassification(nn.Module):
-    def __init__(self, text_embedding_vectors, d_model=300, max_seq_len=256, output_dim=2):
+    def __init__(self, text_embedding_vectors, d_model=200, max_seq_len=256, output_dim=2):
         super().__init__()
 
         # モデルの構築

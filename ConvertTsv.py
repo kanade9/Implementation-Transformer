@@ -60,6 +60,16 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     def del_sym(df):
         print(df['text'])
+        df['text'] = df['text'].replace('０', '')
+        df['text'] = df['text'].replace('１', '')
+        df['text'] = df['text'].replace('２', '')
+        df['text'] = df['text'].replace('３', '')
+        df['text'] = df['text'].replace('４', '')
+        df['text'] = df['text'].replace('５', '')
+        df['text'] = df['text'].replace('６', '')
+        df['text'] = df['text'].replace('７', '')
+        df['text'] = df['text'].replace('８', '')
+        df['text'] = df['text'].replace('９', '')
         df['text'] = df['text'].replace('\d+年', '')
         df['text'] = df['text'].replace('\d+月', '')
         df['text'] = df['text'].replace('\d+日', '')
@@ -159,7 +169,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     test_dl = torchtext.data.Iterator(test_ds, batch_size=batch_size, train=False, sort=False)
 
     # 検証データセットで確認
-    batch = next(iter(val_dl))
+    batch = next(iter(train_dl))
 
     if debug_log:
         print(batch.Text)
@@ -168,4 +178,4 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     return train_dl, val_dl, test_dl, TEXT
 
 
-get_IMDb_DataLoaders_and_TEXT(debug_log=bool(1))
+get_IMDb_DataLoaders_and_TEXT(debug_log=0)

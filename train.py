@@ -15,7 +15,7 @@ dataloaders_dict = {"train": train_dl, "val": val_dl}
 from Transformer import TransformerClassification
 
 # モデル構築
-net = TransformerClassification(text_embedding_vectors=TEXT.vocab.vectors, d_model=300, max_seq_len=256, output_dim=2)
+net = TransformerClassification(text_embedding_vectors=TEXT.vocab.vectors, d_model=200, max_seq_len=256, output_dim=2)
 
 
 # ネットワークの初期化を定義
