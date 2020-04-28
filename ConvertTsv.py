@@ -59,7 +59,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     print(symbol_list)
 
     def del_sym(df):
-        print(df['text'])
+        # print(df['text'])
         df['text'] = df['text'].replace('０', '')
         df['text'] = df['text'].replace('１', '')
         df['text'] = df['text'].replace('２', '')
@@ -155,19 +155,19 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print("単語数:", len(jp_word2vec_vectors.itos))
 
     # ベクトル化したバージョンのボキャブラリーを作成する
-    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=10)
+    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=1)
 
     # ボキャブラリーのベクトルの確認を行う
     if debug_log:
         print(TEXT.vocab.vectors.shape)
-        print(TEXT.vocab.vectors)
+        # print(TEXT.vocab.vectors)
         print(TEXT.vocab.stoi)
 
     # DataLoaderの作成
     train_dl = torchtext.data.Iterator(train_ds, batch_size=batch_size, train=True)
     val_dl = torchtext.data.Iterator(val_ds, batch_size=batch_size, train=False, sort=False)
     test_dl = torchtext.data.Iterator(test_ds, batch_size=batch_size, train=False, sort=False)
-
+    
     # 検証データセットで確認
     batch = next(iter(train_dl))
 
@@ -178,4 +178,4 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     return train_dl, val_dl, test_dl, TEXT
 
 
-get_IMDb_DataLoaders_and_TEXT(debug_log=0)
+get_IMDb_DataLoaders_and_TEXT(debug_log=1)
