@@ -84,7 +84,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     # いらないものを取り去り、tsvに格納する作業
     for DataFrameTextIndex in range(len(news)):
-        print(news.iloc[DataFrameTextIndex])
+       #  print(news.iloc[DataFrameTextIndex])
         news.iloc[DataFrameTextIndex] = del_sym(news.iloc[DataFrameTextIndex])
 
     news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
@@ -161,20 +161,19 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     if debug_log:
         print(TEXT.vocab.vectors.shape)
         # print(TEXT.vocab.vectors)
-        print(TEXT.vocab.stoi)
+        # print(TEXT.vocab.stoi)
 
     # DataLoaderの作成
     train_dl = torchtext.data.Iterator(train_ds, batch_size=batch_size, train=True)
     val_dl = torchtext.data.Iterator(val_ds, batch_size=batch_size, train=False, sort=False)
     test_dl = torchtext.data.Iterator(test_ds, batch_size=batch_size, train=False, sort=False)
-    
+
     # 検証データセットで確認
     batch = next(iter(train_dl))
 
     if debug_log:
-        print(batch.Text)
-        print(batch.Label)
-
+     print(batch.Text)
+     print(batch.Label)
     return train_dl, val_dl, test_dl, TEXT
 
 
