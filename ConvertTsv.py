@@ -17,7 +17,7 @@ def tokenizer_with_preprocessing(tagger: mecab, text: str):
     return [tok for tok in tagger.parse(text).split()]
 
 
-def pick_sym(tagger: MeCab, text: str) -> List[str]:
+def pick_sym(tagger: mecab_sym, text: str) -> List[str]:
     node = tagger.parse(text)
     node_list = node.split("\n")
     return [node[0] for node in node_list if "記号" in node]
@@ -51,8 +51,7 @@ def del_sym(df):
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
     filenames = glob.glob(base + '/data-japanese/text/*/*')
-    # filenames = [base + '/data-japanese/text/kaden-channel/kaden-channel-5774093.txt',
-    #              base + '/data-japanese/text/kaden-channel/kaden-channel-5774562.txt']
+
     # print(filenames,len(filenames))
     keys = []
     texts = []
@@ -86,14 +85,12 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     print(symbol_list)
 
     # いらないものを取り去り、tsvに格納する作業
-    for DataFrameTextIndex in range(len(news)):
-        #  print(news.iloc[DataFrameTextIndex])
-        news.iloc[DataFrameTextIndex] = del_sym(news.iloc[DataFrameTextIndex])
-
+    news["text"] = news["text"].apply(del_sym)
     news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
 
     train_set, test_set = train_test_split(news, test_size=0.2)
 
+    """
     f = open(base + '/data-japanese/jp_train.tsv', 'w')
     for index in range(len(train_set)):
         text = train_set['text'].iloc[index]
@@ -109,6 +106,9 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         text = text + '\t' + str(label_num) + '\t' + '\n'
         f.write(text)
     f.close()
+    """
+    train_set.news[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', delimiter='\t')
+    test_set.news[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', delimiter='\t')
 
     # ここから前処理
 
