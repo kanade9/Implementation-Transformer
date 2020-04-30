@@ -17,9 +17,10 @@ mecab_sym = MeCab("-Ochasen")
 
 
 # mecab
-def tokenizer_with_preprocessing(tagger: MeCab, text: str) -> List[str]:
-    return [tok for tok in tagger.parse(text)]
-
+def tokenizer_with_preprocessing(text: str) -> List[str]:
+    # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
+    tagger=mecab
+    return [tok for tok in tagger.parse(text).split()]
 
 # mecab_sym
 def pick_sym(text: str, tagger: MeCab) -> List[str]:
@@ -111,7 +112,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     # ここから前処理
 
-    print(tokenizer_with_preprocessing(tagger=mecab, text='私はお寿司が好きです。'))
+    print(tokenizer_with_preprocessing(text='私はお寿司が好きです。'))
 
     # DataLoaderの作成
     # init_token 全部の文章で文頭に入れておく単語
