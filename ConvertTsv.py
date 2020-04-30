@@ -9,8 +9,44 @@ from sklearn.model_selection import train_test_split
 
 base = os.path.dirname(os.path.abspath(__file__))
 
+mecab = MeCab("-Owakati")
+mecab_sym = MeCab("-Ochasen")
 
-# print(base)
+
+def tokenizer_with_preprocessing(tagger: mecab, text: str):
+    return [tok for tok in tagger.parse(text).split()]
+
+
+def pick_sym(tagger: MeCab, text: str) -> List[str]:
+    node = tagger.parse(text)
+    node_list = node.split("\n")
+    return [node[0] for node in node_list if "記号" in node]
+
+
+def del_sym(df):
+    symbol_list = []
+    # print(df['text'])
+    df['text'] = df['text'].replace('０', '')
+    df['text'] = df['text'].replace('１', '')
+    df['text'] = df['text'].replace('２', '')
+    df['text'] = df['text'].replace('３', '')
+    df['text'] = df['text'].replace('４', '')
+    df['text'] = df['text'].replace('５', '')
+    df['text'] = df['text'].replace('６', '')
+    df['text'] = df['text'].replace('７', '')
+    df['text'] = df['text'].replace('８', '')
+    df['text'] = df['text'].replace('９', '')
+    df['text'] = df['text'].replace('\d+年', '')
+    df['text'] = df['text'].replace('\d+月', '')
+    df['text'] = df['text'].replace('\d+日', '')
+    df['text'] = df['text'].replace('\d', '')
+    df['text'] = df['text'].replace('\n', '')
+
+    for i in range(len(symbol_list)):
+        if not symbol_list[i]:
+            continue
+        df['text'] = df['text'].replace(symbol_list[i], '')
+    return df
 
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
@@ -36,18 +72,9 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     # natoo-pyではコンストラクタに渡す
 
-    mecab_sym = MeCab("-Ochasen")
     print(mecab_sym.parse('こんにちはかなちゃん。'))
     a = 'こんにちはかなちゃん。'
     print(mecab_sym.parse(a).split("\n"))
-    symbol_list = []
-
-    def pick_sym(text):
-        node = mecab_sym.parse(text)
-        node_list = node.split("\n")
-        for node in node_list:
-            if '記号' in node:
-                symbol_list.append(node[0])
 
     news['text'] = news['text'].apply(mojimoji.han_to_zen)
 
@@ -58,38 +85,13 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     symbol_list = list(set(symbol_list))
     print(symbol_list)
 
-    def del_sym(df):
-        # print(df['text'])
-        df['text'] = df['text'].replace('０', '')
-        df['text'] = df['text'].replace('１', '')
-        df['text'] = df['text'].replace('２', '')
-        df['text'] = df['text'].replace('３', '')
-        df['text'] = df['text'].replace('４', '')
-        df['text'] = df['text'].replace('５', '')
-        df['text'] = df['text'].replace('６', '')
-        df['text'] = df['text'].replace('７', '')
-        df['text'] = df['text'].replace('８', '')
-        df['text'] = df['text'].replace('９', '')
-        df['text'] = df['text'].replace('\d+年', '')
-        df['text'] = df['text'].replace('\d+月', '')
-        df['text'] = df['text'].replace('\d+日', '')
-        df['text'] = df['text'].replace('\d', '')
-        df['text'] = df['text'].replace('\n', '')
-
-        for i in range(len(symbol_list)):
-            if not symbol_list[i]:
-                continue
-            df['text'] = df['text'].replace(symbol_list[i], '')
-        return df
-
     # いらないものを取り去り、tsvに格納する作業
     for DataFrameTextIndex in range(len(news)):
-       #  print(news.iloc[DataFrameTextIndex])
+        #  print(news.iloc[DataFrameTextIndex])
         news.iloc[DataFrameTextIndex] = del_sym(news.iloc[DataFrameTextIndex])
 
     news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
 
-    # train_set, test_set = train_test_split(news, test_size=0.2)
     train_set, test_set = train_test_split(news, test_size=0.2)
 
     f = open(base + '/data-japanese/jp_train.tsv', 'w')
@@ -109,10 +111,6 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     f.close()
 
     # ここから前処理
-    mecab = MeCab("-Owakati")
-
-    def tokenizer_with_preprocessing(text):
-        return [tok for tok in mecab.parse(text).split()]
 
     print(tokenizer_with_preprocessing('私はお寿司が好きです。'))
 
@@ -148,7 +146,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print('１つ目の訓練データ', vars(train_ds[0]))
 
     # torchtextで単語ベクトルとして英語学習済みモデルを利用する。
-    jp_word2vec_vectors = Vectors(name=base+'/data-japanese/japanese_word2vec_vectors.vec')
+    jp_word2vec_vectors = Vectors(name=base + '/data-japanese/japanese_word2vec_vectors.vec')
 
     if debug_log:
         print("1単語を表現する次元数:", jp_word2vec_vectors.dim)
@@ -172,8 +170,8 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     batch = next(iter(train_dl))
 
     if debug_log:
-     print(batch.Text)
-     print(batch.Label)
+        print(batch.Text)
+        print(batch.Label)
     return train_dl, val_dl, test_dl, TEXT
 
 
