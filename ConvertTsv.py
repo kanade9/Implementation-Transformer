@@ -3,9 +3,12 @@ import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zip
 from torchtext.vocab import Vectors
 
 # 日本語を分類するにあたって追加
-import glob, torch, mojimoji, pandas as pd, numpy
+import glob, torch, mojimoji, pandas as pd, numpy,itertools
 from natto import MeCab
 from sklearn.model_selection import train_test_split
+from typing import List
+
+List[str]
 
 base = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,18 +16,19 @@ mecab = MeCab("-Owakati")
 mecab_sym = MeCab("-Ochasen")
 
 
-def tokenizer_with_preprocessing(tagger: mecab, text: str):
-    return [tok for tok in tagger.parse(text).split()]
+# mecab
+def tokenizer_with_preprocessing(tagger: MeCab, text: str) -> List[str]:
+    return [tok for tok in tagger.parse(text)]
 
 
-def pick_sym(tagger: mecab_sym, text: str) -> List[str]:
+# mecab_sym
+def pick_sym(text: str, tagger: MeCab) -> List[str]:
     node = tagger.parse(text)
     node_list = node.split("\n")
     return [node[0] for node in node_list if "記号" in node]
 
 
-def del_sym(df):
-    symbol_list = []
+def del_sym(df, symbol_list):
     # print(df['text'])
     df['text'] = df['text'].replace('０', '')
     df['text'] = df['text'].replace('１', '')
@@ -77,12 +81,15 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     news['text'] = news['text'].apply(mojimoji.han_to_zen)
 
-    symbol_list = []
-    for i in range(len(news)):
-        symbol_list.append(pick_sym(news['text'].iloc[i]))
+    symbol_list = list(news["text"].apply(pick_sym,tagger=mecab_sym))
 
-    symbol_list = list(set(symbol_list))
-    print(symbol_list)
+    # 2次元のsymbol_listを1次元リストにする。
+    all_symbol_list = itertools.chain.from_iterable(symbol_list)
+    # for i in range(len(news)):
+    # symbol_list.append(pick_sym(news['text'].iloc[i]))
+
+    all_symbol_list = list(set(all_symbol_list))
+    print(all_symbol_list)
 
     # いらないものを取り去り、tsvに格納する作業
     news["text"] = news["text"].apply(del_sym)
