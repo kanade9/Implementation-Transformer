@@ -28,29 +28,21 @@ def pick_sym(text: str, tagger: MeCab) -> List[str]:
     return [node[0] for node in node_list if "記号" in node]
 
 
-def del_sym(df, symbol_list):
-    # print(df['text'])
-    df['text'] = df['text'].replace('０', '')
-    df['text'] = df['text'].replace('１', '')
-    df['text'] = df['text'].replace('２', '')
-    df['text'] = df['text'].replace('３', '')
-    df['text'] = df['text'].replace('４', '')
-    df['text'] = df['text'].replace('５', '')
-    df['text'] = df['text'].replace('６', '')
-    df['text'] = df['text'].replace('７', '')
-    df['text'] = df['text'].replace('８', '')
-    df['text'] = df['text'].replace('９', '')
-    df['text'] = df['text'].replace('\d+年', '')
-    df['text'] = df['text'].replace('\d+月', '')
-    df['text'] = df['text'].replace('\d+日', '')
-    df['text'] = df['text'].replace('\d', '')
-    df['text'] = df['text'].replace('\n', '')
+def del_sym(df_text: str, symbol_list: List) -> str:
+    trans_table = str.maketrans({"０":"0","１":"1","２":"2","３":"3","４":"4","５":"5","６":"6","７":"7","８":"8","９":"9",})
+
+    df_text.translate(trans_table)
+    df_text.replace('\d+年', '')
+    df_text.replace('\d+月', '')
+    df_text.replace('\d+日', '')
+    df_text.replace('\d', '')
+    df_text.replace('\n', '')
 
     for i in range(len(symbol_list)):
         if not symbol_list[i]:
             continue
-        df['text'] = df['text'].replace(symbol_list[i], '')
-    return df
+        df_text.replace(symbol_list[i], '')
+    return df_text
 
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
@@ -92,7 +84,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     print(all_symbol_list)
 
     # いらないものを取り去り、tsvに格納する作業
-    news["text"] = news["text"].apply(del_sym)
+    news['text'] = news['text'].apply(del_sym, symbol_list=all_symbol_list)
     news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
 
     train_set, test_set = train_test_split(news, test_size=0.2)
@@ -114,12 +106,12 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         f.write(text)
     f.close()
     """
-    train_set.news[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', delimiter='\t')
-    test_set.news[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', delimiter='\t')
+    train_set[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', sep='\t')
+    test_set[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', sep='\t')
 
     # ここから前処理
 
-    print(tokenizer_with_preprocessing('私はお寿司が好きです。'))
+    print(tokenizer_with_preprocessing(tagger=mecab, text='私はお寿司が好きです。'))
 
     # DataLoaderの作成
     # init_token 全部の文章で文頭に入れておく単語
