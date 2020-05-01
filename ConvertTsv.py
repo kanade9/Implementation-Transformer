@@ -1,63 +1,25 @@
 # トレーニングデータのneg,pos,テストデータのneg,posのtsvファイル作成
 import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zipfile
 from torchtext.vocab import Vectors
+import mojimoji,
 
 
 def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False):
-    path_list = ['./data/aclImdb/train/pos/', './data/aclImdb/train/neg/', './data/aclImdb/test/pos/',
-                 './data/aclImdb/test/neg/']
+    # ニュース記事のデータセットでは、IDMBデータセットみたくtrain,test用にデータセットが別れていない
+    f = open('./data-japanese/livedoordata.tsv', 'w')
 
-    # ここなんか訓練データが半減するので、公式の以下の方法で行う
-    """
-    for dataset_path in path_list:
-        if 'train' in dataset_path:
-            f = open('./data/IMDb_train.tsv', 'w')
-        else:
-            f = open('./data/IMDb_test.tsv', 'w')
+    path = './data-japanese/'
 
-    # ダウンロードしてきたファイルの整形を行う
-    for fname in glob.glob(os.path.join(dataset_path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '1' + '\t' + '\n'
-            f.write(text)
-    f.close()
-    """
-    f = open('./data/IMDb_train.tsv', 'w')
-
-    path = './data/aclImdb/train/pos/'
-
-    for fname in glob.glob(os.path.join(path, '*.txt')):
+    # ラベル"1"をライフハックとする。
+    for fname in glob.glob(os.path.join(path + "text/it-lifehack/", '*.txt')):
         with io.open(fname, 'r', encoding="utf-8") as ff:
             text = ff.readline()
             text = text.replace('\t', " ")
             text = text + '\t' + '1' + '\t' + '\n'
             f.write(text)
 
-    path = './data/aclImdb/train/neg/'
-    for fname in glob.glob(os.path.join(path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '0' + '\t' + '\n'
-            f.write(text)
-
-    f.close()
-
-    f = open('./data/IMDb_test.tsv', 'w')
-
-    path = './data/aclImdb/test/pos/'
-    for fname in glob.glob(os.path.join(path, '*.txt')):
-        with io.open(fname, 'r', encoding="utf-8") as ff:
-            text = ff.readline()
-            text = text.replace('\t', " ")
-            text = text + '\t' + '1' + '\t' + '\n'
-            f.write(text)
-
-    path = './data/aclImdb/test/neg/'
-
-    for fname in glob.glob(os.path.join(path, '*.txt')):
+    # ラベル"0"を家電チャンネルとする。
+    for fname in glob.glob(os.path.join(path + "test/kaden-channel/", '*.txt')):
         with io.open(fname, 'r', encoding="utf-8") as ff:
             text = ff.readline()
             text = text.replace('\t', " ")
