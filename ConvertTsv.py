@@ -20,29 +20,33 @@ mecab_sym = MeCab("-Ochasen")
 def tokenizer_with_preprocessing(text: str) -> List[str]:
     # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
     tagger=mecab
-    return [tok for tok in tagger.parse(text).split()]
+    return tagger.parse(text).split()
 
-# mecab_sym
+# mecab_syms
 def pick_sym(text: str, tagger: MeCab) -> List[str]:
     node = tagger.parse(text)
     node_list = node.split("\n")
-    return [node[0] for node in node_list if "記号" in node]
+    return [node[0] for node in node_list if len(node.split())>=4 and "記号" in node.split()[3]]
 
 
 def del_sym(df_text: str, symbol_list: List) -> str:
     trans_table = str.maketrans({"０":"0","１":"1","２":"2","３":"3","４":"4","５":"5","６":"6","７":"7","８":"8","９":"9",})
+    
+    print(df_text)
+    df_text=df_text.translate(trans_table)
+    df_text=df_text.replace('\d+年', '')
+    df_text=df_text.replace('\d+月', '')
+    df_text=df_text.replace('\d+日', '')
+    df_text=df_text.replace('\d', '')
+    df_text=df_text.replace('＠','')
+    df_text=df_text.replace('\n', '')
+    print(df_text)
 
-    df_text.translate(trans_table)
-    df_text.replace('\d+年', '')
-    df_text.replace('\d+月', '')
-    df_text.replace('\d+日', '')
-    df_text.replace('\d', '')
-    df_text.replace('\n', '')
-
-    for i in range(len(symbol_list)):
-        if not symbol_list[i]:
+    for symbol in symbol_list:
+        print(symbol)
+        if not symbol:
             continue
-        df_text.replace(symbol_list[i], '')
+        df_text=df_text.replace(str(symbol), '')
     return df_text
 
 
@@ -84,6 +88,8 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     all_symbol_list = list(set(all_symbol_list))
     print(all_symbol_list)
 
+    kakunin=del_sym(df_text='「＠＠０１２￥¥」｜！あいうエオ！？漢、。\n＋hello$%^',symbol_list=all_symbol_list)
+    print(kakunin)
     # いらないものを取り去り、tsvに格納する作業
     news['text'] = news['text'].apply(del_sym, symbol_list=all_symbol_list)
     news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
