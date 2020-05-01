@@ -7,9 +7,10 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     path_list = ['./data/aclImdb/train/pos/', './data/aclImdb/train/neg/', './data/aclImdb/test/pos/',
                  './data/aclImdb/test/neg/']
 
-    f = open('./data/IMDb_train.tsv', 'w')
+    base = os.path.dirname(os.path.abspath(__file__))
+    f = open(base+'/data/IMDb_train.tsv', 'w')
 
-    path = './data/aclImdb/train/pos/'
+    path = base+'/data/aclImdb/train/pos/'
 
     for fname in glob.glob(os.path.join(path, '*.txt')):
         with io.open(fname, 'r', encoding="utf-8") as ff:
@@ -18,7 +19,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
             text = text + '\t' + '1' + '\t' + '\n'
             f.write(text)
 
-    path = './data/aclImdb/train/neg/'
+    path = base+'/data/aclImdb/train/neg/'
     for fname in glob.glob(os.path.join(path, '*.txt')):
         with io.open(fname, 'r', encoding="utf-8") as ff:
             text = ff.readline()
@@ -28,9 +29,9 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     f.close()
 
-    f = open('./data/IMDb_test.tsv', 'w')
+    f = open(base+'/data/IMDb_test.tsv', 'w')
 
-    path = './data/aclImdb/test/pos/'
+    path = base+'/data/aclImdb/test/pos/'
     for fname in glob.glob(os.path.join(path, '*.txt')):
         with io.open(fname, 'r', encoding="utf-8") as ff:
             text = ff.readline()
@@ -38,7 +39,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
             text = text + '\t' + '1' + '\t' + '\n'
             f.write(text)
 
-    path = './data/aclImdb/test/neg/'
+    path = base+'/data/aclImdb/test/neg/'
 
     for fname in glob.glob(os.path.join(path, '*.txt')):
         with io.open(fname, 'r', encoding="utf-8") as ff:
@@ -89,7 +90,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # Datasetの作成
     # 訓練および検証データセットを分ける。
     train_val_ds, test_ds = torchtext.data.TabularDataset.splits(
-        path='./data/', train='IMDb_train.tsv',
+        path=base+'/data/', train='IMDb_train.tsv',
         test='IMDb_test.tsv', format='tsv',
         fields=[('Text', TEXT), ('Label', LABEL)])
 
@@ -108,7 +109,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print('１つ目の訓練データ', vars(train_ds[0]))
 
     # torchtextで単語ベクトルとして英語学習済みモデルを利用する。
-    english_fasttext_vectors = Vectors(name='data/wiki-news-300d-1M.vec')
+    english_fasttext_vectors = Vectors(name=base+'/data/wiki-news-300d-1M.vec')
 
     if debug_log:
         print("1単語を表現する次元数:", english_fasttext_vectors.dim)
@@ -136,3 +137,5 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print(batch.Label)
 
     return train_dl, val_dl, test_dl, TEXT
+
+get_IMDb_DataLoaders_and_TEXT(debug_log=1)
