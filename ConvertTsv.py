@@ -66,7 +66,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
             texts.append(''.join(f.readlines()[2:]))
             labels.append(os.path.split(filepath)[-1])
 
-    news = pd.DataFrame({'key': keys, 'label': labels, 'text': texts})
+    news = pd.DataFrame({'text': texts ,'label': labels})
 
     # natoo-pyではコンストラクタに渡す
 
@@ -90,6 +90,9 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     print(kakunin)
     # いらないものを取り去り、tsvに格納する作業
     news['text'] = news['text'].apply(del_sym, symbol_list=all_symbol_list)
+    # わかち書きする。
+    news['text'] = news['text'].apply(tokenizer_with_preprocessing)
+    
     news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
 
     train_set, test_set = train_test_split(news, test_size=0.2)
