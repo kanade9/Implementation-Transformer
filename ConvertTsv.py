@@ -32,7 +32,6 @@ def pick_sym(text: str, tagger: MeCab) -> List[str]:
 def del_sym(df_text: str, symbol_list: List) -> str:
     trans_table = str.maketrans({"０":"0","１":"1","２":"2","３":"3","４":"4","５":"5","６":"6","７":"7","８":"8","９":"9",})
     
-    print(df_text)
     df_text=df_text.translate(trans_table)
     df_text=df_text.replace('\d+年', '')
     df_text=df_text.replace('\d+月', '')
@@ -40,10 +39,9 @@ def del_sym(df_text: str, symbol_list: List) -> str:
     df_text=df_text.replace('\d', '')
     df_text=df_text.replace('＠','')
     df_text=df_text.replace('\n', '')
-    print(df_text)
+    df_text=df_text.replace('\t', '')
 
     for symbol in symbol_list:
-        print(symbol)
         if not symbol:
             continue
         df_text=df_text.replace(str(symbol), '')
