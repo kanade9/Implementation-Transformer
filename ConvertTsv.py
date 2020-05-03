@@ -3,7 +3,7 @@ import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zip
 from torchtext.vocab import Vectors
 
 # 日本語を分類するにあたって追加
-import glob, torch, mojimoji, pandas as pd, numpy,itertools
+import glob, torch, mojimoji, pandas as pd, numpy as np,itertools
 from natto import MeCab
 from sklearn.model_selection import train_test_split
 from typing import List
@@ -17,10 +17,10 @@ mecab_sym = MeCab("-Ochasen")
 
 
 # mecab
-def tokenizer_with_preprocessing(text: str) -> List[str]:
+def tokenizer_with_preprocessing(text: str) -> str:
     # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
     tagger=mecab
-    return tagger.parse(text).split()
+    return ' '.join(tagger.parse(text).split())
 
 # mecab_syms
 def pick_sym(text: str, tagger: MeCab) -> List[str]:
@@ -30,7 +30,7 @@ def pick_sym(text: str, tagger: MeCab) -> List[str]:
 
 
 def del_sym(df_text: str, symbol_list: List) -> str:
-    trans_table = str.maketrans({"０":"0","１":"1","２":"2","３":"3","４":"4","５":"5","６":"6","７":"7","８":"8","９":"9",})
+    trans_table = str.maketrans({"０":"0","１":"1","２":"2","３":"3","４":"4","５":"5","６":"6","７":"7","８":"8","９":"9","0":""})
     
     df_text=df_text.translate(trans_table)
     df_text=df_text.replace('\d+年', '')
@@ -52,7 +52,6 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     filenames = glob.glob(base + '/data-japanese/text/*/*')
 
     # print(filenames,len(filenames))
-    keys = []
     texts = []
     labels = []
     for filename in filenames:
@@ -62,7 +61,6 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         with open(filename, 'r', encoding='utf-8') as f:
             filepath, basename = os.path.split(filename)
 
-            keys.append(os.path.splitext(basename)[0])
             texts.append(''.join(f.readlines()[2:]))
             labels.append(os.path.split(filepath)[-1])
 
@@ -74,9 +72,9 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     a = 'こんにちはかなちゃん。'
     print(mecab_sym.parse(a).split("\n"))
 
-    news['text'] = news['text'].apply(mojimoji.han_to_zen)
 
     symbol_list = list(news["text"].apply(pick_sym,tagger=mecab_sym))
+    news['text'] = news['text'].apply(mojimoji.han_to_zen)
 
     # 2次元のsymbol_listを1次元リストにする。
     all_symbol_list = itertools.chain.from_iterable(symbol_list)
@@ -95,7 +93,15 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     
     news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
 
+    # 悪さしてる原因??
     train_set, test_set = train_test_split(news, test_size=0.2)
+    train_set.drop(columns=train_set.columns[[1]])
+    test_set.drop(columns=train_set.columns[[1]])
+    # samples_num=len(news)
+    # train_size=int(samples_num*0.8)
+    # val_size=samples_num-train_size
+    # train_set, test_set= torch.utils.data.random_split(news, [train_size, val_size])
+
 
     """
     f = open(base + '/data-japanese/jp_train.tsv', 'w')
@@ -114,8 +120,8 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         f.write(text)
     f.close()
     """
-    train_set[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', sep='\t')
-    test_set[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', sep='\t')
+    train_set[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', sep='\t',index=False)
+    test_set[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', sep='\t',index=False)
 
     # ここから前処理
 
@@ -160,7 +166,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print("単語数:", len(jp_word2vec_vectors.itos))
 
     # ベクトル化したバージョンのボキャブラリーを作成する
-    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=1)
+    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=3)
 
     # ボキャブラリーのベクトルの確認を行う
     if debug_log:
