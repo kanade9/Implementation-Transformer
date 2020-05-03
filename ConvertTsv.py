@@ -3,7 +3,7 @@ import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zip
 from torchtext.vocab import Vectors
 
 # 日本語を分類するにあたって追加
-import glob, torch, mojimoji, pandas as pd, numpy as np,itertools
+import glob, torch, mojimoji, pandas as pd, numpy as np,itertools,re
 from natto import MeCab
 from sklearn.model_selection import train_test_split
 from typing import List
@@ -30,7 +30,7 @@ def pick_sym(text: str, tagger: MeCab) -> List[str]:
 
 
 def del_sym(df_text: str, symbol_list: List) -> str:
-    trans_table = str.maketrans({"０":"0","１":"1","２":"2","３":"3","４":"4","５":"5","６":"6","７":"7","８":"8","９":"9","0":""})
+    trans_table = str.maketrans(' ',' ','0123456789０１２３４５６７８９')
     
     df_text=df_text.translate(trans_table)
     df_text=df_text.replace('\d+年', '')
@@ -84,7 +84,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     all_symbol_list = list(set(all_symbol_list))
     print(all_symbol_list)
 
-    kakunin=del_sym(df_text='「＠＠０１２￥¥」｜！あいうエオ！？漢、。\n＋hello$%^',symbol_list=all_symbol_list)
+    kakunin=del_sym(df_text='「＠＠1０１２￥¥」｜！あいうエオ！？漢、。\n＋hello$%^',symbol_list=all_symbol_list)
     print(kakunin)
     # いらないものを取り去り、tsvに格納する作業
     news['text'] = news['text'].apply(del_sym, symbol_list=all_symbol_list)
