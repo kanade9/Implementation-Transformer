@@ -67,10 +67,10 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     news = pd.DataFrame({'text': texts ,'label': labels})
 
     # natoo-pyではコンストラクタに渡す
-
-    print(mecab_sym.parse('こんにちはかなちゃん。'))
-    a = 'こんにちはかなちゃん。'
-    print(mecab_sym.parse(a).split("\n"))
+    if debug_log:
+        print(mecab_sym.parse('こんにちはかなちゃん。'))
+        a = 'こんにちはかなちゃん。'
+        print(mecab_sym.parse(a).split("\n"))
 
 
     symbol_list = list(news["text"].apply(pick_sym,tagger=mecab_sym))
@@ -82,10 +82,11 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # symbol_list.append(pick_sym(news['text'].iloc[i]))
 
     all_symbol_list = list(set(all_symbol_list))
-    print(all_symbol_list)
 
-    kakunin=del_sym(df_text='「＠＠1０１２￥¥」｜！あいうエオ！？漢、。\n＋hello$%^',symbol_list=all_symbol_list)
-    print(kakunin)
+    if debug_log:
+        print(all_symbol_list)
+        kakunin=del_sym(df_text='「＠＠1０１２￥¥」｜！あいうエオ！？漢、。\n＋hello$%^',symbol_list=all_symbol_list)
+        print(kakunin)
     # いらないものを取り去り、tsvに格納する作業
     news['text'] = news['text'].apply(del_sym, symbol_list=all_symbol_list)
     # わかち書きする。
@@ -120,12 +121,13 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         f.write(text)
     f.close()
     """
-    train_set[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', sep='\t',index=False)
-    test_set[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', sep='\t',index=False)
+    train_set[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', sep='\t',index=False,header=None)
+    test_set[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', sep='\t',index=False,header=None)
 
     # ここから前処理
 
-    print(tokenizer_with_preprocessing(text='私はお寿司が好きです。'))
+    if debug_log:
+        print(tokenizer_with_preprocessing(text='私はお寿司が好きです。'))
 
     # DataLoaderの作成
     # init_token 全部の文章で文頭に入れておく単語
@@ -188,4 +190,5 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     return train_dl, val_dl, test_dl, TEXT
 
 
+# ConvertTsvをデバッグするときにコメントアウトを外す
 get_IMDb_DataLoaders_and_TEXT(debug_log=1)
