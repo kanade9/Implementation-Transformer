@@ -21,14 +21,42 @@ def mk_html(index,batch,preds,normlized_weight_1,normlized_weight_2, TEXT):
 
     # ラベルと予測結果を文字に置き換える
     if label ==0:
-        label_str="Negative"
+        label_str="dokujo-tsushin"
+    elif label==1:
+        label_str="it-life-hack"
+    elif label==2:
+        label_str="kaden-channel"
+    elif label==3:
+        label_str="livedoor-homme"
+    elif label==4:
+        label_str="movie-enter"
+    elif label==5:
+        label_str="peachy"
+    elif label==6:
+        label_str="smax"
+    elif label==7:
+        label_str="sports-watch"
     else:
-        label_str="Positive"
+        label_str="topic-news"
 
     if pred ==0:
-        pred_str="Negative"
+        pred_str="dokujo-tsushin"
+    elif pred==1:
+        pred_str="it-life-hack"
+    elif pred==2:
+        pred_str="kaden-channel"
+    elif pred==3:
+        pred_str="livedoor-homme"
+    elif pred==4:
+        pred_str="movie-enter"
+    elif pred==5:
+        pred_str="peachy"
+    elif pred==6:
+        pred_str="smax"
+    elif pred==7:
+        pred_str="sports-watch"
     else:
-        pred_str="Positive"
+        pred_str="topic-news"
 
     html='正解ラベル:{}<br>推論ラベル:{}<br><br>'.format(label_str,pred_str)
 

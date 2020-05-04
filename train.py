@@ -145,7 +145,7 @@ epoch_acc = epoch_corrects.double() / len(test_dl.dataset)
 print('テストデータ{}個での正解率:{:.4f}'.format(len(test_dl.dataset), epoch_acc))
 
 # ここから判定根拠のHTML出力を行う
-output_data_num = 50
+output_data_num = 100
 html_output = "<!DOCTYPE html><html lang=\"en\"><meta charset=\"utf-8\"/>"
 f = open('./result.html', 'a')
 

@@ -7,7 +7,6 @@
 import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zipfile
 from torchtext.vocab import Vectors
 from gensim.models import KeyedVectors
-"""
 url = "https://www.rondhuit.com/download/ldcc-20140209.tar.gz"
 save_path = "./data-japanese/ldcc-20140209.tar.gz"
 if not os.path.exists(save_path):
@@ -28,3 +27,4 @@ tar2.close()
 
 tmp_model = KeyedVectors.load_word2vec_format('./data-japanese/entity_vector/entity_vector.model.bin', binary=True)
 tmp_model.wv.save_word2vec_format('./data-japanese/japanese_word2vec_vectors.vec')
+"""

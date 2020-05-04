@@ -36,7 +36,7 @@ def pick_sym(text: str, tagger: MeCab) -> List[str]:
 
 
 def del_sym(df_text: str, symbol_list: List) -> str:
-    trans_table = str.maketrans(' ',' ','0123456789０１２３４５６７８９')
+    trans_table = str.maketrans(' ',' ','0123456789０１２３４５６７８９abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ')
     
     df_text=df_text.translate(trans_table)
     df_text=df_text.replace('\d+年', '')
@@ -98,7 +98,8 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # わかち書きする。
     news['text'] = news['text'].apply(tokenizer_with_preprocessing)
     
-    news['label'] = news['label'].replace({'it-life-hack': 0, 'kaden-channel': 1, })
+    news['label'] = news['label'].replace({'dokujo-tsushin': 0, 'it-life-hack': 1, 'kaden-channel': 2, 'livedoor-homme':3,
+    'movie-enter':4 , 'peachy': 5,'smax':6,'sports-watch':7,'topic-news':8})
 
     # 悪さしてる原因??
     train_set, test_set = train_test_split(news, test_size=0.2)
@@ -174,7 +175,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print("単語数:", len(jp_word2vec_vectors.itos))
 
     # ベクトル化したバージョンのボキャブラリーを作成する
-    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=3)
+    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=1)
 
     # ボキャブラリーのベクトルの確認を行う
     if debug_log:
@@ -198,4 +199,4 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
 
 # ConvertTsvをデバッグするときにコメントアウトを外す
-get_IMDb_DataLoaders_and_TEXT(debug_log=1)
+# get_IMDb_DataLoaders_and_TEXT(debug_log=1)
