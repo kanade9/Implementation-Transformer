@@ -17,10 +17,16 @@ mecab_sym = MeCab("-Ochasen")
 
 
 # mecab
+# tsvに格納する際にはこちらが使われる
 def tokenizer_with_preprocessing(text: str) -> str:
     # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
     tagger=mecab
     return ' '.join(tagger.parse(text).split())
+
+def tokenizer_with_preprocessing_return_list(text: str) -> list:
+    # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
+    tagger=mecab
+    return tagger.parse(text).split()
 
 # mecab_syms
 def pick_sym(text: str, tagger: MeCab) -> List[str]:
@@ -133,7 +139,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # init_token 全部の文章で文頭に入れておく単語
     # eos_token 全部の文章で文末に入れておく単語
 
-    TEXT = torchtext.data.Field(sequential=True, tokenize=tokenizer_with_preprocessing,
+    TEXT = torchtext.data.Field(sequential=True, tokenize=tokenizer_with_preprocessing_return_list,
                                 use_vocab=True, lower=True, include_lengths=True, batch_first=True,
                                 fix_length=max_length, init_token="<cls>", eos_token="<eos>")
 
@@ -174,7 +180,8 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     if debug_log:
         print(TEXT.vocab.vectors.shape)
         # print(TEXT.vocab.vectors)
-        # print(TEXT.vocab.stoi)
+        print(TEXT.vocab.stoi)
+        print(TEXT.vocab.itos)
 
     # DataLoaderの作成
     train_dl = torchtext.data.Iterator(train_ds, batch_size=batch_size, train=True)
