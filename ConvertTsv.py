@@ -163,6 +163,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     # debug
     if debug_log:
+        print('データの総数',len(news))
         print('訓練データの数', len(train_ds))
         print('検証データの数', len(val_ds))
         print('１つ目の訓練データ', vars(train_ds[0]))
@@ -199,4 +200,4 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
 
 # ConvertTsvをデバッグするときにコメントアウトを外す
-# get_IMDb_DataLoaders_and_TEXT(debug_log=1)
+get_IMDb_DataLoaders_and_TEXT(debug_log=0)
