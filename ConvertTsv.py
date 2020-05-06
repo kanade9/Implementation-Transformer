@@ -36,7 +36,7 @@ def pick_sym(text: str, tagger: MeCab) -> List[str]:
 
 
 def del_sym(df_text: str, symbol_list: List) -> str:
-    trans_table = str.maketrans(' ',' ','0123456789０１２３４５６７８９')
+    trans_table = str.maketrans(' ',' ','0123456789０１２３４５６７８９abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ')
     
     df_text=df_text.translate(trans_table)
     df_text=df_text.replace('\d+年', '')
@@ -174,7 +174,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print("単語数:", len(jp_word2vec_vectors.itos))
 
     # ベクトル化したバージョンのボキャブラリーを作成する
-    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=3)
+    TEXT.build_vocab(train_ds, vectors=jp_word2vec_vectors, min_freq=1)
 
     # ボキャブラリーのベクトルの確認を行う
     if debug_log:
