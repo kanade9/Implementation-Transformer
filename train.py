@@ -15,7 +15,7 @@ dataloaders_dict = {"train": train_dl, "val": val_dl}
 from Transformer import TransformerClassification
 
 # モデル構築
-net = TransformerClassification(text_embedding_vectors=TEXT.vocab.vectors, d_model=200, max_seq_len=256, output_dim=2)
+net = TransformerClassification(text_embedding_vectors=TEXT.vocab.vectors, d_model=200, max_seq_len=256, output_dim=9)
 
 
 # ネットワークの初期化を定義
@@ -145,7 +145,7 @@ epoch_acc = epoch_corrects.double() / len(test_dl.dataset)
 print('テストデータ{}個での正解率:{:.4f}'.format(len(test_dl.dataset), epoch_acc))
 
 # ここから判定根拠のHTML出力を行う
-output_data_num = 100
+output_data_num = 60
 html_output = "<!DOCTYPE html><html lang=\"en\"><meta charset=\"utf-8\"/>"
 f = open('./result.html', 'a')
 

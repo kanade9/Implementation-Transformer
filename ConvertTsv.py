@@ -3,7 +3,7 @@ import glob, os, io, string, urllib.request, tarfile, re, torchtext, random, zip
 from torchtext.vocab import Vectors
 
 # 日本語を分類するにあたって追加
-import glob, torch, mojimoji, pandas as pd, numpy as np,itertools,re
+import glob, torch, mojimoji, pandas as pd, numpy as np, itertools, re
 from natto import MeCab
 from sklearn.model_selection import train_test_split
 from typing import List
@@ -17,34 +17,43 @@ mecab_sym = MeCab("-Ochasen")
 
 
 # mecab
+# tsvに格納する際にはこちらが使われる
 def tokenizer_with_preprocessing(text: str) -> str:
     # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
-    tagger=mecab
+    tagger = mecab
     return ' '.join(tagger.parse(text).split())
+
+
+def tokenizer_with_preprocessing_return_list(text: str) -> list:
+    # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
+    tagger = mecab
+    return tagger.parse(text).split()
+
 
 # mecab_syms
 def pick_sym(text: str, tagger: MeCab) -> List[str]:
     node = tagger.parse(text)
     node_list = node.split("\n")
-    return [node[0] for node in node_list if len(node.split())>=4 and "記号" in node.split()[3]]
+    return [node[0] for node in node_list if len(node.split()) >= 4 and "記号" in node.split()[3]]
 
 
 def del_sym(df_text: str, symbol_list: List) -> str:
-    trans_table = str.maketrans(' ',' ','0123456789０１２３４５６７８９abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ')
-    
-    df_text=df_text.translate(trans_table)
-    df_text=df_text.replace('\d+年', '')
-    df_text=df_text.replace('\d+月', '')
-    df_text=df_text.replace('\d+日', '')
-    df_text=df_text.replace('\d', '')
-    df_text=df_text.replace('＠','')
-    df_text=df_text.replace('\n', '')
-    df_text=df_text.replace('\t', '')
+    trans_table = str.maketrans(' ', ' ',
+                                '0123456789０１２３４５６７８９abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ')
+
+    df_text = df_text.translate(trans_table)
+    df_text = df_text.replace('\d+年', '')
+    df_text = df_text.replace('\d+月', '')
+    df_text = df_text.replace('\d+日', '')
+    df_text = df_text.replace('\d', '')
+    df_text = df_text.replace('＠', '')
+    df_text = df_text.replace('\n', '')
+    df_text = df_text.replace('\t', '')
 
     for symbol in symbol_list:
         if not symbol:
             continue
-        df_text=df_text.replace(str(symbol), '')
+        df_text = df_text.replace(str(symbol), '')
     return df_text
 
 
@@ -64,7 +73,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
             texts.append(''.join(f.readlines()[2:]))
             labels.append(os.path.split(filepath)[-1])
 
-    news = pd.DataFrame({'text': texts ,'label': labels})
+    news = pd.DataFrame({'text': texts, 'label': labels})
 
     # natoo-pyではコンストラクタに渡す
     if debug_log:
@@ -72,8 +81,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         a = 'こんにちはかなちゃん。'
         print(mecab_sym.parse(a).split("\n"))
 
-
-    symbol_list = list(news["text"].apply(pick_sym,tagger=mecab_sym))
+    symbol_list = list(news["text"].apply(pick_sym, tagger=mecab_sym))
     news['text'] = news['text'].apply(mojimoji.han_to_zen)
 
     # 2次元のsymbol_listを1次元リストにする。
@@ -85,15 +93,16 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     if debug_log:
         print(all_symbol_list)
-        kakunin=del_sym(df_text='「＠＠1０１２￥¥」｜！あいうエオ！？漢、。\n＋hello$%^',symbol_list=all_symbol_list)
+        kakunin = del_sym(df_text='「＠＠1０１２￥¥」｜！あいうエオ！？漢、。\n＋hello$%^', symbol_list=all_symbol_list)
         print(kakunin)
     # いらないものを取り去り、tsvに格納する作業
     news['text'] = news['text'].apply(del_sym, symbol_list=all_symbol_list)
     # わかち書きする。
     news['text'] = news['text'].apply(tokenizer_with_preprocessing)
-    
-    news['label'] = news['label'].replace({'dokujo-tsushin': 0, 'it-life-hack': 1, 'kaden-channel': 2, 'livedoor-homme':3,
-    'movie-enter':4 , 'peachy': 5,'smax':6,'sports-watch':7,'topic-news':8})
+
+    news['label'] = news['label'].replace(
+        {'dokujo-tsushin': 0, 'it-life-hack': 1, 'kaden-channel': 2, 'livedoor-homme': 3,
+         'movie-enter': 4, 'peachy': 5, 'smax': 6, 'sports-watch': 7, 'topic-news': 8})
 
     # 悪さしてる原因??
     train_set, test_set = train_test_split(news, test_size=0.2)
@@ -103,7 +112,6 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # train_size=int(samples_num*0.8)
     # val_size=samples_num-train_size
     # train_set, test_set= torch.utils.data.random_split(news, [train_size, val_size])
-
 
     """
     f = open(base + '/data-japanese/jp_train.tsv', 'w')
@@ -122,8 +130,8 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         f.write(text)
     f.close()
     """
-    train_set[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', sep='\t',index=False,header=None)
-    test_set[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', sep='\t',index=False,header=None)
+    train_set[['text', 'label']].to_csv(base + '/data-japanese/jp_train.tsv', sep='\t', index=False, header=None)
+    test_set[['text', 'label']].to_csv(base + '/data-japanese/jp_test.tsv', sep='\t', index=False, header=None)
 
     # ここから前処理
 
@@ -134,7 +142,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # init_token 全部の文章で文頭に入れておく単語
     # eos_token 全部の文章で文末に入れておく単語
 
-    TEXT = torchtext.data.Field(sequential=True, tokenize=tokenizer_with_preprocessing,
+    TEXT = torchtext.data.Field(sequential=True, tokenize=tokenizer_with_preprocessing_return_list,
                                 use_vocab=True, lower=True, include_lengths=True, batch_first=True,
                                 fix_length=max_length, init_token="<cls>", eos_token="<eos>")
 
@@ -189,7 +197,6 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print(batch.Text)
         print(batch.Label)
     return train_dl, val_dl, test_dl, TEXT
-
 
 # ConvertTsvをデバッグするときにコメントアウトを外す
 # get_IMDb_DataLoaders_and_TEXT(debug_log=1)
