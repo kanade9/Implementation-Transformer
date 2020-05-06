@@ -12,21 +12,19 @@ List[str]
 
 base = os.path.dirname(os.path.abspath(__file__))
 
-mecab = MeCab("-Owakati")
-mecab_sym = MeCab("-Ochasen")
+# mecab = MeCab("-Owakati")
+# mecab_sym = MeCab("-Ochasen")
 
 
 # mecab
 # tsvに格納する際にはこちらが使われる
-def tokenizer_with_preprocessing(text: str) -> str:
+def tokenizer_with_preprocessing(tagger: MeCab, text: str) -> str:
     # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
-    tagger = mecab
     return ' '.join(tagger.parse(text).split())
 
 
-def tokenizer_with_preprocessing_return_list(text: str) -> list:
+def tokenizer_with_preprocessing_return_list(tagger: MeCab, text: str) -> list:
     # torchtextDataFieldに引数taggerをうまく渡せなかったのでここに書いた。
-    tagger = mecab
     return tagger.parse(text).split()
 
 
@@ -77,11 +75,11 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
 
     # natoo-pyではコンストラクタに渡す
     if debug_log:
-        print(mecab_sym.parse('こんにちはかなちゃん。'))
+        print(MeCab("-Ochasen").parse('こんにちはかなちゃん。'))
         a = 'こんにちはかなちゃん。'
-        print(mecab_sym.parse(a).split("\n"))
+        print(MeCab("-Ochasen").parse(a).split("\n"))
 
-    symbol_list = list(news["text"].apply(pick_sym, tagger=mecab_sym))
+    symbol_list = list(news["text"].apply(pick_sym, tagger=MeCab("-Ochasen")))
     news['text'] = news['text'].apply(mojimoji.han_to_zen)
 
     # 2次元のsymbol_listを1次元リストにする。
@@ -98,7 +96,7 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # いらないものを取り去り、tsvに格納する作業
     news['text'] = news['text'].apply(del_sym, symbol_list=all_symbol_list)
     # わかち書きする。
-    news['text'] = news['text'].apply(tokenizer_with_preprocessing)
+    news['text'] = news['text'].apply(lambda x: tokenizer_with_preprocessing(MeCab("-Owakati"), x))
 
     news['label'] = news['label'].replace(
         {'dokujo-tsushin': 0, 'it-life-hack': 1, 'kaden-channel': 2, 'livedoor-homme': 3,
@@ -136,13 +134,14 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
     # ここから前処理
 
     if debug_log:
-        print(tokenizer_with_preprocessing(text='私はお寿司が好きです。'))
+        print(tokenizer_with_preprocessing(tagger=MeCab("-Owakati"), text='私はお寿司が好きです。'))
 
     # DataLoaderの作成
     # init_token 全部の文章で文頭に入れておく単語
     # eos_token 全部の文章で文末に入れておく単語
 
-    TEXT = torchtext.data.Field(sequential=True, tokenize=tokenizer_with_preprocessing_return_list,
+    TEXT = torchtext.data.Field(sequential=True,
+                                tokenize=lambda x: tokenizer_with_preprocessing_return_list(MeCab("-Owakati"), x),
                                 use_vocab=True, lower=True, include_lengths=True, batch_first=True,
                                 fix_length=max_length, init_token="<cls>", eos_token="<eos>")
 
@@ -198,5 +197,6 @@ def get_IMDb_DataLoaders_and_TEXT(max_length=256, batch_size=24, debug_log=False
         print(batch.Label)
     return train_dl, val_dl, test_dl, TEXT
 
+
 # ConvertTsvをデバッグするときにコメントアウトを外す
-# get_IMDb_DataLoaders_and_TEXT(debug_log=1)
+get_IMDb_DataLoaders_and_TEXT(debug_log=1)
